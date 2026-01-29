@@ -10,6 +10,8 @@ A high-performance Windows optimizer, fully rewritten in Rust from the original 
 
 Game Mode is a complete 1:1 recreation of gamemode.exe by x1lly  in Rust, featuring significant/further improvements in memory efficiency, and overall system overhead. The Rust port maintains 1:1 feature parity with the original while adding new advanced modules and optimizations.
 
+![Xilly Game Mode Screenshot](screenshots.png)
+
 ## Performance Benchmarks on Victus 15 Laptop (AMD Ryzen 5 8645HS + RTX 4050 6GB w/ 16GB DDR5)
 
 ### Hardware Sensor Comparison
