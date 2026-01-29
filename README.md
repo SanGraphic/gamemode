@@ -14,6 +14,8 @@ Game Mode is a complete 1:1 recreation of gamemode.exe by x1lly  in Rust, featur
 
 ## Performance Benchmarks on Victus 15 Laptop (AMD Ryzen 5 8645HS + RTX 4050 6GB w/ 16GB DDR5)
 
+**Benchmark:** Fortnite Creative Map "Martoz 1v1" on DX12 Performance Mode - Epic Textures, High Meshes, High View Distance, everything else Low settings.
+
 ### Hardware Sensor Comparison
 
 Real-world benchmark data comparing baseline (no optimizer), original C# version, and Our Rust fork:
