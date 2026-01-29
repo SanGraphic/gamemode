@@ -1,0 +1,29 @@
+export component GlassCard inherits Rectangle {
+    border-radius: 40px; // Default
+    // callback request-drag(); // Handled internally now or via clean api?
+    // Actually we keep it because app-window removed it from invocation,
+    // but GlassCard definition still needs it if we use it?
+    // In app-window we removed `request-drag => { root.start-window-drag(); }`
+    // So the callback in GlassCard is unused.
+    // Clean up:
+    
+    padding: 0; // Explicitly 0
+    
+    background: @radial-gradient(circle, #0072FF20 0%, #0072FF00 100%);
+
+
+    // TouchArea removed from here to allow granular control in AppWindow
+    // This component is now just a visual shell
+    
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #070812;
+        border-radius: root.border-radius - 1px;
+        border-width: 1px;
+        border-color: #FFFFFF1A;
+        clip: true; // Ensure content stays inside
+        
+        @children
+    }
+}

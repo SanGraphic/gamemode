@@ -1,0 +1,55 @@
+[package]
+name = "gamemode"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slint = { version = "1.9", features = ["backend-qt", "compat-1-2"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+once_cell = "1.19"
+dirs = "6.0.0"
+ureq = { version = "2.10", features = ["json"] }
+tray-icon = "0.14"
+image = "0.25"
+auto-launch = "0.5"
+
+[dependencies.windows]
+version = "0.58"
+features = [
+    "Win32_Foundation",
+    "Win32_System_Registry",
+    "Win32_System_Power",
+    "Win32_System_Threading",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_SystemServices",
+    "Win32_System_SystemInformation",
+    "Win32_System_Com",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_Security",
+    "Win32_System_Memory",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_System_Services",
+    "Wdk_System_SystemServices",
+    "Wdk_System_SystemInformation",
+    "Win32_System_ProcessStatus",
+    "Win32_Graphics_Dwm",
+]
+
+[build-dependencies]
+slint-build = "1.9"
+winres = "0.1"
+image = "0.25"
+ico = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = 3

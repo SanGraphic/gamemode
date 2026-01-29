@@ -1,0 +1,47 @@
+// 1:1 with C# MainToggleButton style
+export component ToggleButton inherits Rectangle {
+    in-out property <bool> checked;
+    in property <string> text;
+    callback clicked;
+
+    height: 50px;  // 1:1 with C# Height="50"
+    border-radius: 25px;  // 1:1 with C# CornerRadius="25"
+    background: root.checked ? #0072FF : #1B1E2D;  // 1:1 with C# colors
+    border-color: root.checked ? #0072FF : #4B617826;  // 1:1 with C# BorderBrush="#264B6178"
+    border-width: 1px;
+
+    animate background { duration: 200ms; easing: ease-out; }
+    animate border-color { duration: 200ms; easing: ease-out; }
+
+    // Glow effect when active
+    Rectangle {
+        z: -1;
+        x: -8px;
+        y: -8px;
+        width: parent.width + 16px;
+        height: parent.height + 16px;
+        border-radius: 33px;
+        background: #0072FF40;
+        opacity: root.checked ? 1.0 : 0.0;
+        animate opacity { duration: 200ms; easing: ease-out; }
+    }
+
+    // 1:1 with C# ContentPresenter
+    Text {
+        text: root.text;
+        font-size: 15px;  // 1:1 with C# FontSize="15"
+        font-weight: 600;  // 1:1 with C# FontWeight="SemiBold"
+        color: #FFFFFF;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+        mouse-cursor: pointer;
+    }
+}

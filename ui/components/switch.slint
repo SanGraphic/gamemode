@@ -1,0 +1,55 @@
+// 1:1 with C# ToggleSwitchStyle
+export component Switch inherits Rectangle {
+    in-out property <bool> checked;
+    in property <string> text;
+    callback toggled(bool);
+
+    height: 28px;  // 1:1 with C# Grid Height="28"
+    background: transparent;
+
+    HorizontalLayout {
+        // 1:1 with C# Grid ColumnDefinitions: Width="*" and Width="Auto"
+        Text {
+            text: root.text;
+            color: #B8BCC4;  // 1:1 with C# Foreground="#B8BCC4"
+            font-size: 14px;  // 1:1 with C# FontSize="14"
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+
+        // 1:1 with C# Track Border
+        Rectangle {
+            width: 46px;   // 1:1 with C# Width="46"
+            height: 24px;  // 1:1 with C# Height="24"
+            border-radius: 12px;  // 1:1 with C# CornerRadius="12"
+            background: root.checked ? #0072FF : #2D3748;
+            border-width: 1px;
+            border-color: #FFFFFF1A;  // 1:1 with C# BorderBrush="#1AFFFFFF"
+            
+            // 1:1 with C# animation Duration="0:0:0.25"
+            animate background { duration: 250ms; easing: cubic-bezier(0.33, 0, 0.67, 1); }
+
+            // 1:1 with C# Thumb Ellipse
+            Rectangle {
+                width: 18px;   // 1:1 with C# Width="18"
+                height: 18px;  // 1:1 with C# Height="18"
+                border-radius: 9px;
+                background: #FFFFFF;
+                // 1:1 with C# Canvas.Left: 3 (off) and 23 (on), Canvas.Top="2"
+                x: root.checked ? 25px : 3px;
+                y: 3px;
+                
+                // 1:1 with C# Duration="0:0:0.25" CubicEase
+                animate x { duration: 250ms; easing: cubic-bezier(0.33, 0, 0.67, 1); }
+            }
+            
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.checked = !root.checked;
+                    root.toggled(root.checked);
+                }
+            }
+        }
+    }
+}

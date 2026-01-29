@@ -1,0 +1,14 @@
+pub mod registry;
+pub mod power;
+pub mod process;
+pub mod memory;
+pub mod network;
+pub mod windows;
+pub mod settings;
+pub mod options;
+pub mod detector;
+pub mod process_utils;
+pub mod update;
+pub mod gamemode;
+pub mod revi_tweaks;
+pub mod advanced_modules;

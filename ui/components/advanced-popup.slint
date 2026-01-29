@@ -1,0 +1,260 @@
+// Advanced Game Mode Options Popup
+// Consistent UI with main app styling
+
+import { Switch } from "switch.slint";
+
+export struct AdvancedSettings {
+    // 1. Core Parking Disable (CPU-specific, 6+ cores)
+    disable_core_parking: bool,
+    // 4. Large System Pages (RAM-specific, 16GB+)
+    enable_large_pages: bool,
+    // 5. MMCSS Thread Priority Boost
+    mmcss_priority_boost: bool,
+    // 8. HAGS Control (GPU-specific)
+    enable_hags: bool,
+    // 11. Process Idle Optimization
+    process_idle_demotion: bool,
+}
+
+export component AdvancedPopup inherits Rectangle {
+    in-out property <bool> popup_visible: false;
+    in-out property <AdvancedSettings> advanced_settings;
+    callback settings_changed(AdvancedSettings);
+    callback close_popup();
+
+    // Full screen overlay
+    width: 100%;
+    height: 100%;
+    background: transparent;
+
+    // Backdrop
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #00000080;
+        opacity: root.popup_visible ? 1.0 : 0.0;
+        animate opacity { duration: 200ms; easing: ease-out; }
+
+        TouchArea {
+            clicked => { root.close_popup(); }
+        }
+    }
+
+    // Popup Card - matches main app styling
+    Rectangle {
+        width: 320px;
+        height: 440px;
+        x: (parent.width - self.width) / 2;
+        y: root.popup_visible ? (parent.height - self.height) / 2 : parent.height;
+        background: #070812;  // Match main app background
+        border-radius: 20px;  // Match config section radius
+        border-width: 1px;
+        border-color: #FFFFFF26;  // Match main app border
+        
+        animate y { duration: 350ms; easing: cubic-bezier(0.33, 0, 0.67, 1); }
+
+        // Prevent clicks from closing popup
+        TouchArea {
+            width: 100%;
+            height: 100%;
+        }
+
+        VerticalLayout {
+            padding: 24px;
+            spacing: 0px;
+
+            // Header
+            HorizontalLayout {
+                alignment: space-between;
+                
+                Text {
+                    text: "Advanced Modules";
+                    color: #FFFFFF;
+                    font-family: "Segoe UI";
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+
+                // Close button - matches main app close button
+                TouchArea {
+                    width: 28px;
+                    height: 28px;
+                    mouse-cursor: pointer;
+                    clicked => { root.close_popup(); }
+
+                    Rectangle {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 14px;
+                        background: parent.has-hover ? #FFFFFF20 : transparent;
+                        animate background { duration: 80ms; easing: ease-out; }
+                    }
+
+                    Path {
+                        width: 10px;
+                        height: 10px;
+                        x: 9px;
+                        y: 9px;
+                        stroke: #9CA3AF;
+                        stroke-width: 2px;
+                        MoveTo { x: 0; y: 0; }
+                        LineTo { x: 10; y: 10; }
+                        MoveTo { x: 0; y: 10; }
+                        LineTo { x: 10; y: 0; }
+                    }
+                }
+            }
+
+            Rectangle { height: 4px; }
+
+            // Subtitle - matches main app muted text
+            Text {
+                text: "Hardware-aware tweaks for 1% lows";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 16px; }
+
+            // CPU Section Header - matches GAME MODE MODULES style
+            Text {
+                text: "CPU OPTIMIZATIONS";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 10px;
+                font-weight: 600;
+            }
+            Rectangle { height: 12px; }
+
+            // 1. Core Parking
+            Switch {
+                text: "Disable Core Parking";
+                checked: root.advanced_settings.disable_core_parking;
+                toggled(val) => {
+                    root.advanced_settings.disable_core_parking = val;
+                    root.settings_changed(root.advanced_settings);
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "Prevents micro-stutter from core wake latency";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 12px; }
+
+            // 5. MMCSS Priority
+            Switch {
+                text: "MMCSS Priority Boost";
+                checked: root.advanced_settings.mmcss_priority_boost;
+                toggled(val) => {
+                    root.advanced_settings.mmcss_priority_boost = val;
+                    root.settings_changed(root.advanced_settings);
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "Boost multimedia scheduler for game threads";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 16px; }
+            Rectangle { height: 1px; background: #FFFFFF15; }
+            Rectangle { height: 12px; }
+
+            // Memory Section
+            Text {
+                text: "MEMORY OPTIMIZATIONS";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 10px;
+                font-weight: 600;
+            }
+            Rectangle { height: 12px; }
+
+            // 4. Large Pages
+            Switch {
+                text: "Enable Large Pages";
+                checked: root.advanced_settings.enable_large_pages;
+                toggled(val) => {
+                    root.advanced_settings.enable_large_pages = val;
+                    root.settings_changed(root.advanced_settings);
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "Better TLB efficiency (16GB+ RAM, reboot required)";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 16px; }
+            Rectangle { height: 1px; background: #FFFFFF15; }
+            Rectangle { height: 12px; }
+
+            // GPU Section
+            Text {
+                text: "GPU OPTIMIZATIONS";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 10px;
+                font-weight: 600;
+            }
+            Rectangle { height: 12px; }
+
+            // 8. HAGS
+            Switch {
+                text: "Hardware GPU Scheduling";
+                checked: root.advanced_settings.enable_hags;
+                toggled(val) => {
+                    root.advanced_settings.enable_hags = val;
+                    root.settings_changed(root.advanced_settings);
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "RTX 30/40, RX 6000/7000 (reboot required)";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 16px; }
+            Rectangle { height: 1px; background: #FFFFFF15; }
+            Rectangle { height: 12px; }
+
+            // Process Section
+            Text {
+                text: "PROCESS OPTIMIZATIONS";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 10px;
+                font-weight: 600;
+            }
+            Rectangle { height: 12px; }
+
+            // 11. Process Idle Demotion
+            Switch {
+                text: "Process Idle Demotion";
+                checked: root.advanced_settings.process_idle_demotion;
+                toggled(val) => {
+                    root.advanced_settings.process_idle_demotion = val;
+                    root.settings_changed(root.advanced_settings);
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "Demote non-game processes to idle priority";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+        }
+    }
+}

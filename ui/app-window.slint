@@ -1,0 +1,401 @@
+import { GlassCard } from "components/glass-card.slint";
+import { ToggleButton } from "components/toggle-button.slint";
+import { Switch } from "components/switch.slint";
+import { AdvancedPopup, AdvancedSettings } from "components/advanced-popup.slint";
+
+export { AdvancedSettings }
+
+struct AppSettings {
+    suspend_explorer: bool,
+    suspend_browsers: bool,
+    suspend_launchers: bool,
+    advanced_tweaks: bool,
+    disable_mpo: bool,
+    run_on_startup: bool,
+}
+
+export component AppWindow inherits Window {
+    title: "Xilly Game Mode";
+    width: 400px;
+    height: root.content-height;
+    background: transparent;
+    no-frame: true;
+    always-on-top: false;
+    default-font-family: "Segoe UI";
+    default-font-size: 14px;
+    default-font-weight: 400;
+
+    callback toggle_game_mode(bool);
+    callback settings_changed(AppSettings);
+    callback advanced_settings_changed(AdvancedSettings);
+    callback export_specs();
+    callback close_app();
+    callback check_updates();
+    callback move_window(length, length); 
+
+    in-out property <bool> active: false;
+    in-out property <bool> show_advanced_popup: false;
+    in-out property <AppSettings> settings: {
+        suspend_explorer: false,
+        suspend_browsers: true,
+        suspend_launchers: true,
+        advanced_tweaks: false,
+        disable_mpo: false,
+        run_on_startup: false
+    };
+    in-out property <AdvancedSettings> advanced_settings: {
+        disable_core_parking: false,
+        enable_large_pages: false,
+        mmcss_priority_boost: false,
+        enable_hags: false,
+        process_idle_demotion: false
+    };
+    
+    // Height adjusted for MPO toggle + Advanced button
+    in-out property <length> content-height: active ? 320px : 700px;
+    animate content-height { duration: 500ms; easing: cubic-bezier(0.33, 0, 0.67, 1); } 
+
+    Rectangle {
+        width: 100%;
+        height: root.content-height;
+        y: 0px; 
+        background: transparent;
+        border-radius: 40px;
+
+        Rectangle {
+            width: 100%;
+            height: 100%;
+            background: #070812; 
+            border-radius: 40px;
+            clip: true;
+
+            VerticalLayout {
+                padding-top: 20px;
+                alignment: center;
+                width: 100%;
+
+                // Logo Card
+                HorizontalLayout {
+                    alignment: center;
+                    Rectangle {
+                        width: 200px;
+                        height: 160px;
+                        background: #1C1F2310;
+                        border-radius: 20px;
+                        border-width: 1px;
+                        border-color: #FFFFFF33;
+
+                        TouchArea {
+                            width: 100%;
+                            height: 100%;
+                            mouse-cursor: move;
+                            
+                            property <length> start-x;
+                            property <length> start-y;
+                            property <bool> dragging: false;
+
+                            pointer-event(event) => {
+                                 if (event.kind == PointerEventKind.down) {
+                                     self.start-x = self.mouse-x;
+                                     self.start-y = self.mouse-y;
+                                     self.dragging = true;
+                                 } else if (event.kind == PointerEventKind.up || event.kind == PointerEventKind.cancel) {
+                                     self.dragging = false;
+                                 }
+                            }
+                            
+                            moved => {
+                                if (self.dragging) {
+                                    root.move_window(self.mouse-x - self.start-x, self.mouse-y - self.start-y);
+                                }
+                            }
+                        }
+                        
+                        Image {
+                            source: @image-url("assets/logo.png");
+                            width: 120px;
+                            height: 120px;
+                            x: (parent.width - self.width) / 2;
+                            y: (parent.height - self.height) / 2;
+                            image-fit: contain;
+                        }
+
+                        // Status Indicator
+                        Rectangle {
+                            x: parent.width - 16px - 12px;
+                            y: parent.height - 16px - 12px;
+                            width: 12px;
+                            height: 12px;
+                            border-radius: 6px;
+                            background: root.active ? #0072FF : #6B7280;
+                            animate background { duration: 300ms; easing: ease-out; }
+                        }
+                    }
+                }
+
+                Rectangle { height: 24px; }
+
+                // Action Button
+                HorizontalLayout {
+                    alignment: center;
+                    ToggleButton {
+                        width: 250px;
+                        height: 50px;
+                        text: root.active ? "Game Mode Active" : "Activate Game Mode";
+                        checked: root.active;
+                        clicked => {
+                            root.toggle_game_mode(!root.active);
+                        }
+                    }
+                }
+
+                // Config Section
+                HorizontalLayout {
+                    alignment: center;
+                    padding-top: 20px;
+                    
+                    Rectangle {
+                        clip: true;
+                        width: 280px;
+                        height: root.active ? 0px : 378px;  // Increased for Advanced button
+                        opacity: root.active ? 0.0 : 1.0;
+                        
+                        animate height { duration: 500ms; easing: cubic-bezier(0.33, 0, 0.67, 1); }
+                        animate opacity { duration: 300ms; easing: ease-out; }
+
+                        Rectangle {
+                            width: 100%;
+                            height: 100%;
+                            background: #0F141910;
+                            border-radius: 20px;
+                            border-width: 1px;
+                            border-color: #FFFFFF26;
+                            
+                            VerticalLayout {
+                                padding: 24px;
+                                spacing: 0px;
+                                
+                                // Game Mode Modules Header
+                                Text {
+                                    text: "GAME MODE MODULES";
+                                    color: #6B7280;
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                }
+                                Rectangle { height: 16px; }
+
+                                Switch {
+                                    text: "Suspend Explorer";
+                                    checked: root.settings.suspend_explorer;
+                                    toggled(val) => {
+                                        root.settings.suspend_explorer = val;
+                                        root.settings_changed(root.settings);
+                                    }
+                                }
+                                Rectangle { height: 12px; }
+                                
+                                Switch {
+                                    text: "Suspend Browsers";
+                                    checked: root.settings.suspend_browsers;
+                                    toggled(val) => {
+                                        root.settings.suspend_browsers = val;
+                                        root.settings_changed(root.settings);
+                                    }
+                                }
+                                Rectangle { height: 12px; }
+                                
+                                Switch {
+                                    text: "Suspend Launchers";
+                                    checked: root.settings.suspend_launchers;
+                                    toggled(val) => {
+                                        root.settings.suspend_launchers = val;
+                                        root.settings_changed(root.settings);
+                                    }
+                                }
+                                
+                                // Separator
+                                Rectangle { height: 16px; }
+                                Rectangle { 
+                                    height: 1px; 
+                                    background: #FFFFFF15;
+                                }
+                                Rectangle { height: 12px; }
+                                
+                                // Advanced Section Header
+                                Text {
+                                    text: "ADVANCED OPTIMIZATIONS";
+                                    color: #6B7280;
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                }
+                                Rectangle { height: 12px; }
+                                
+                                // Advanced Tweaks Toggle
+                                Switch {
+                                    text: "ReviOS Playbook Port";
+                                    checked: root.settings.advanced_tweaks;
+                                    toggled(val) => {
+                                        root.settings.advanced_tweaks = val;
+                                        root.settings_changed(root.settings);
+                                    }
+                                }
+                                Rectangle { height: 12px; }
+                                
+                                // MPO Toggle
+                                Switch {
+                                    text: "Disable MPO";
+                                    checked: root.settings.disable_mpo;
+                                    toggled(val) => {
+                                        root.settings.disable_mpo = val;
+                                        root.settings_changed(root.settings);
+                                    }
+                                }
+
+                                // Separator before Advanced button
+                                Rectangle { height: 16px; }
+                                Rectangle { 
+                                    height: 1px; 
+                                    background: #FFFFFF15;
+                                }
+                                Rectangle { height: 16px; }
+
+                                // Advanced Modules Button
+                                TouchArea {
+                                    height: 36px;
+                                    mouse-cursor: pointer;
+                                    clicked => { root.show_advanced_popup = true; }
+
+                                    Rectangle {
+                                        width: 100%;
+                                        height: 100%;
+                                        border-radius: 8px;
+                                        background: parent.has-hover ? #0072FF30 : #0072FF20;
+                                        border-width: 1px;
+                                        border-color: #0072FF50;
+                                        animate background { duration: 100ms; easing: ease-out; }
+
+                                        HorizontalLayout {
+                                            alignment: center;
+                                            spacing: 8px;
+                                            
+                                            // Gear icon using Path
+                                            Rectangle {
+                                                width: 16px;
+                                                height: 16px;
+                                                y: (parent.height - self.height) / 2;
+                                                
+                                                Path {
+                                                    width: 14px;
+                                                    height: 14px;
+                                                    x: 1px;
+                                                    y: 1px;
+                                                    stroke: #0072FF;
+                                                    stroke-width: 1.5px;
+                                                    // Simple gear shape
+                                                    MoveTo { x: 7; y: 0; }
+                                                    LineTo { x: 7; y: 3; }
+                                                    MoveTo { x: 7; y: 11; }
+                                                    LineTo { x: 7; y: 14; }
+                                                    MoveTo { x: 0; y: 7; }
+                                                    LineTo { x: 3; y: 7; }
+                                                    MoveTo { x: 11; y: 7; }
+                                                    LineTo { x: 14; y: 7; }
+                                                }
+                                                
+                                                // Center circle
+                                                Rectangle {
+                                                    width: 8px;
+                                                    height: 8px;
+                                                    x: 4px;
+                                                    y: 4px;
+                                                    border-radius: 4px;
+                                                    border-width: 1.5px;
+                                                    border-color: #0072FF;
+                                                    background: transparent;
+                                                }
+                                            }
+
+                                            Text {
+                                                text: "Advanced Modules";
+                                                color: #0072FF;
+                                                font-size: 13px;
+                                                font-weight: 500;
+                                                vertical-alignment: center;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Copy Specs button
+                HorizontalLayout {
+                    alignment: center;
+                    padding-top: 16px;
+                    
+                    if !root.active: TouchArea {
+                        width: specs-text.width;
+                        height: 20px;
+                        mouse-cursor: pointer;
+                        clicked => { root.export_specs(); }
+                        
+                        specs-text := Text {
+                            text: "Copy Specs";
+                            color: parent.has-hover ? #0072FF : #4B5563;
+                            font-size: 12px;
+                            animate color { duration: 100ms; easing: ease-out; }
+                        }
+                    }
+                }
+            }
+            
+            // Close Button
+            TouchArea {
+                x: parent.width - 20px - 32px;
+                y: 20px;
+                width: 32px;
+                height: 32px;
+                mouse-cursor: pointer;
+                clicked => { root.close_app(); }
+
+                Rectangle {
+                    width: 28px;
+                    height: 28px;
+                    x: 2px;
+                    y: 2px;
+                    border-radius: 14px;
+                    background: parent.has-hover ? #FFFFFF20 : transparent;
+                    animate background { duration: 80ms; easing: ease-out; }
+                }
+                    
+                Path {
+                    width: 12px;
+                    height: 12px;
+                    x: 10px;
+                    y: 10px;
+                    stroke: #9CA3AF;
+                    stroke-width: 2px;
+                    MoveTo { x: 0; y: 0; }
+                    LineTo { x: 12; y: 12; }
+                    MoveTo { x: 0; y: 12; }
+                    LineTo { x: 12; y: 0; }
+                }
+            }
+
+            // Advanced Popup Overlay
+            if root.show_advanced_popup: AdvancedPopup {
+                popup_visible: root.show_advanced_popup;
+                advanced_settings: root.advanced_settings;
+                settings_changed(new_settings) => {
+                    root.advanced_settings = new_settings;
+                    root.advanced_settings_changed(new_settings);
+                }
+                close_popup => {
+                    root.show_advanced_popup = false;
+                }
+            }
+        }
+    }
+}
