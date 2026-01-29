@@ -1,4 +1,4 @@
-# Game Mode - Rust Port w/ New Improvements
+# Game Mode - Rust Recreation w/ New Improvements
 ![GitHub](https://img.shields.io/badge/MIT-License-green)
 ![GitHub all releases](https://img.shields.io/github/downloads/SanGraphic/gamemode/total?label=Downloads&style=for-the-badge)
 
