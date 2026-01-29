@@ -47,7 +47,7 @@ Credits to [x1lly](https://x.com/x1lly) for the original program. Peace.
 - **MMCSS Game priority maximized**
 - **Network throttling disabled**
 - **Power throttling disabled**
-- **Telemetry completely disabled**
+- **Telemetry disabled**
 - **Services Disabled**: DiagTrack, WerSvc, DPS, WdiServiceHost, WdiSystemHost, PcaSvc, WSearch, SysMain + 10 more
 
 ---
