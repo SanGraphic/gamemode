@@ -1,6 +1,7 @@
 # Game Mode - Rust Recreation w/ New Improvements
 ![GitHub](https://img.shields.io/badge/MIT-License-green)
-![GitHub all releases](https://img.shields.io/github/downloads/SanGraphic/gamemode/total?label=Downloads&style=for-the-badge)
+[![GitHub all releases](https://img.shields.io/github/downloads/SanGraphic/gamemode/total?label=Downloads&style=for-the-badge)](https://img.shields.io/github/downloads/SanGraphic/gamemode/total
+)
 
 ![Xilly Game Mode Screenshot](screenshots.png)
 
