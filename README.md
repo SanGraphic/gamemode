@@ -1,24 +1,64 @@
-# Game Mode - Rust Port w/new improvements
-
-> **Disclaimer**: This project was ported from C# to Rust using Claude Code with Opus 4.5. All functionality has been thoroughly tested and verified to work the same—if not better—than the original C# version. Additional features, tweaks, and optimizations were added by myself based on personal experience and what I actively use on my own system. **Please create a system restore point before using, just in case.** Call it AI slop or whatever—I don't care. I use this myself daily and the results speak for themselves & you can Benchmark it yourself.
->
-> Credits to [x1lly](https://x.com/x1lly) for the original program. Peace.
-
-A high-performance Windows optimizer, fully rewritten in Rust from the original C# implementation. This tool maximizes gaming performance by intelligently managing system resources, suspending background processes, and applying low-level Windows optimizations.
-
-## Overview
-
-Game Mode is a complete 1:1 recreation of gamemode.exe by x1lly  in Rust, featuring significant/further improvements in memory efficiency, and overall system overhead. The Rust port maintains 1:1 feature parity with the original while adding new advanced modules and optimizations.
+# Game Mode - Rust Port w/ New Improvements
+![GitHub](https://img.shields.io/badge/MIT-License-green)
+![GitHub all releases](https://img.shields.io/github/downloads/SanGraphic/gamemode/total?label=Downloads&style=for-the-badge)
 
 ![Xilly Game Mode Screenshot](screenshots.png)
 
-## Performance Benchmarks on Victus 15 Laptop (AMD Ryzen 5 8645HS + RTX 4050 6GB w/ 16GB DDR5)
+### ⚠ MAKE A SYSTEM RESTORE POINT IN CASE ANYTHING GOES WRONG, TUTORIAL [HERE](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9)
+
+# [Download](https://github.com/SanGraphic/gamemode/releases)
+## Leave a ⭐ if it helped <3
+
+Code Ported & Improved by [@SanGraphic](https://twitter.com/sangraphic)
+
+Credits to [x1lly](https://x.com/x1lly) for the original program. Peace.
+
+---
+
+> **Disclaimer**: This project was ported from C# to Rust using Claude Code with Opus 4.5. All functionality has been thoroughly tested and verified to work the same—if not better—than the original C# version. Additional features, tweaks, and optimizations were added by myself based on personal experience and what I actively use on my own system. Call it AI slop or whatever—I don't care. I use this myself daily and the results speak for themselves & you can benchmark it yourself.
+
+---
+
+## What does it do? (Simplified Summary)
+
+- Suspend Windows Explorer to free ~200MB+ RAM
+- Kill Browsers, Game Launchers & Background Bloatware
+- Apply High Performance Power Plan
+- Disable Telemetry & Unnecessary Services
+- ReviOS-Style Registry Optimizations
+- Advanced Modules: Core Parking, MMCSS Boost, Large Pages, HAGS
+- System Tray Integration with Memory Trimming
+
+## What does it Actually do? (Nerd Summary)
+
+- **Explorer Suspension**: Safely kills Windows Explorer to reduce DWM overhead
+- **Browser Suspension**: Terminates Chrome, Firefox, Edge, Brave, Opera, Vivaldi, Thorium
+- **Game Launcher Management**: Closes Epic, Battle.net, Origin, GOG Galaxy when gaming
+- **Shell UX Suspension**: Suspends SearchHost, TextInputHost, ShellExperienceHost, etc.
+- **Bloatware Termination**: Kills SmartScreen, Cortana, Widgets, OneDrive, GameBar, NVIDIA overlay
+- **Peripheral Software**: Closes iCUE, Logitech G Hub, Razer Synapse, Armoury Crate
+- **Core Parking Disable**: Prevents micro-stutter from core wake latency
+- **MMCSS Priority Boost**: Maximum CPU priority for game threads (SystemResponsiveness=0)
+- **Large System Pages**: Better TLB efficiency for reduced memory access latency
+- **HAGS**: Hardware-Accelerated GPU Scheduling for lower latency
+- **Process Idle Demotion**: Demotes background processes to idle priority
+- **VBS/HVCI disabled** for gaming performance
+- **Spectre/Meltdown mitigations disabled** (optional performance boost)
+- **MMCSS Game priority maximized**
+- **Network throttling disabled**
+- **Power throttling disabled**
+- **Telemetry completely disabled**
+- **Services Disabled**: DiagTrack, WerSvc, DPS, WdiServiceHost, WdiSystemHost, PcaSvc, WSearch, SysMain + 10 more
+
+---
+
+## Performance Benchmarks
+
+**Test System:** Victus 15 Laptop (AMD Ryzen 5 8645HS + RTX 4050 6GB w/ 16GB DDR5)
 
 **Benchmark:** Fortnite Creative Map "Martoz 1v1" on DX12 Performance Mode - Epic Textures, High Meshes, High View Distance, everything else Low settings.
 
 ### Hardware Sensor Comparison
-
-Real-world benchmark data comparing baseline (no optimizer), original C# version, and Our Rust fork:
 
 | Metric | Baseline | Original (C#) | Rust Fork | Improvement |
 |--------|----------|---------------|-----------|-------------|
@@ -44,8 +84,6 @@ Real-world benchmark data comparing baseline (no optimizer), original C# version
 
 ### Frame Time / FPS Analysis
 
-Raw performance averages showing frame stability improvements:
-
 | Metric | Baseline | Original (C#) | Rust Fork | 
 |--------|----------|---------------|-----------|
 | **Average FPS** | 164.13 | 164.20 | 164.53 |
@@ -64,11 +102,9 @@ Raw performance averages showing frame stability improvements:
 | **Fork vs Baseline** | **+6.65%** | **+6.96%** | -17.08% |
 | **Fork vs Original** | **+5.05%** | **+6.05%** | -10.16% |
 
-> **Verdict**: The Rust fork with all toggles (explorer off) is the definitive leader in general fluidity. By raising the P5 average to 135.80 FPS and the P1 average to 115.40 FPS, it provides the highest frame floor for 99% of gameplay. While baseline maintains a technically superior 0.1% Low Average (71.67 FPS), the Fork's ability to pull the 1% and 5% lows significantly higher creates a far more consistent and responsive experience for the vast majority of frames rendered.
+> **Verdict**: The Rust fork with all toggles (explorer off) is the definitive leader in general fluidity. By raising the P5 average to 135.80 FPS and the P1 average to 115.40 FPS, it provides the highest frame floor for 99% of gameplay.
 
 ### Frame Time Consistency
-
-Distribution of frame times showing smoothness quality:
 
 | Category | Placebo | Original (C#) | Rust Fork |
 |----------|---------|---------------|-----------|
@@ -86,59 +122,9 @@ Distribution of frame times showing smoothness quality:
 | **Fork vs Placebo** | **+14.47%** | **54.38%** |
 | **Fork vs Original** | **+10.46%** | **47.16%** |
 
-> **Verdict**: The Rust fork achieves **90.41% ultra-smooth frames** (< 2ms) compared to just 78.98% on placebo—a **14.47% smoothness improvement**. Micro-stutter (jittery frames) is reduced by **54.38%** vs placebo and **47.16%** vs original. This translates to noticeably smoother gameplay with far fewer frame time spikes.
+> **Verdict**: The Rust fork achieves **90.41% ultra-smooth frames** (< 2ms) compared to just 78.98% on placebo—a **14.47% smoothness improvement**. Micro-stutter (jittery frames) is reduced by **54.38%** vs placebo and **47.16%** vs original.
 
-## Features
-
-### Core Game Mode
-- **Explorer Suspension**: Safely kills Windows Explorer to free ~200MB+ RAM and reduce DWM overhead
-- **Browser Suspension**: Terminates Chrome, Firefox, Edge, Brave, Opera, Vivaldi, Thorium
-- **Game Launcher Management**: Closes Epic, Battle.net, Origin, GOG Galaxy when gaming
-- **Shell UX Suspension**: Suspends SearchHost, TextInputHost, ShellExperienceHost, etc.
-- **Bloatware Termination**: Kills SmartScreen, Cortana, Widgets, OneDrive, GameBar, NVIDIA overlay
-- **Peripheral Software**: Closes iCUE, Logitech G Hub, Razer Synapse, Armoury Crate
-
-### Power Optimization
-- **High Performance Mode**: Automatically switches to high-performance power plan
-- **Laptop Boost Optimization**: Intelligent CPU boost management for laptops
-- **Power Setting Unlock**: Exposes hidden Windows power settings
-
-### Advanced Modules (New in Rust Edition)
-- **Core Parking Disable**: Prevents micro-stutter from core wake latency
-- **MMCSS Priority Boost**: Maximum CPU priority for game threads (SystemResponsiveness=0)
-- **Large System Pages**: Better TLB efficiency for reduced memory access latency
-- **HAGS (Hardware-Accelerated GPU Scheduling)**: GPU-side scheduling for lower latency
-- **Process Idle Demotion**: Demotes background processes to idle priority
-
-### ReviOS-Style Tweaks
-When "Advanced Tweaks" is enabled, applies performance optimizations Ported from AME ReviOS Playbook:
-
-**Services Disabled:**
-- DiagTrack (Telemetry)
-- WerSvc (Windows Error Reporting)
-- DPS, WdiServiceHost, WdiSystemHost (Diagnostics)
-- PcaSvc (Program Compatibility Assistant)
-- WSearch, SysMain (Indexing/Prefetch)
-- And 10+ more background services
-
-**Registry Optimizations:**
-- VBS/HVCI disabled for gaming performance
-- Spectre/Meltdown mitigations disabled (optional performance boost)
-- MMCSS Game priority maximized
-- Network throttling disabled
-- Power throttling disabled
-- Telemetry completely disabled
-
-### System Tray Integration
-- Minimizes to system tray for zero desktop footprint
-- One-click toggle from tray icon
-- Prevents exit while game mode is active (safety feature)
-- Memory trimming when hidden for minimal idle footprint
-
-### Additional Features
-- **MPO (Multi-Plane Overlay) Toggle**: Disable MPO for better frame pacing
-- **Fullscreen Game Detection**: Automatically detects and focuses fullscreen games
-- **Hardware Specs Export**: One-click system specs to clipboard
+---
 
 ## Rust vs C# Comparison
 
@@ -158,16 +144,9 @@ When "Advanced Tweaks" is enabled, applies performance optimizations Ported from
 4. **Smaller Footprint**: Single executable, no dependencies
 5. **Predictable Performance**: No GC pauses during critical game moments
 
-## Installation
+---
 
-### Requirements
-- Windows 10/11 (64-bit)
-- Administrator privileges (required for system optimizations)
-
-### Download
-Download the latest `gamemode.exe` from the [Releases](https://github.com/SanGraphic/gamemode/releases) page.
-
-### Building from Source
+## How to Build from Source?
 
 ```bash
 # Clone the repository
@@ -184,6 +163,8 @@ cargo build --release
 - Rust 1.70+ (stable)
 - Qt 6.x (for Slint UI backend)
 
+---
+
 ## Usage
 
 1. **Run as Administrator** - Right-click `gamemode.exe` → "Run as administrator"
@@ -194,36 +175,9 @@ cargo build --release
    - Configure Advanced Modules for hardware-specific tweaks
 3. **Activate Game Mode** - Click the power button or toggle from system tray
 4. **Launch Your Game** - The tool will detect fullscreen games automatically
-5. **Deactivate** - Click toggle again.
+5. **Deactivate** - Click toggle again
 
-## Project Structure
-
-```
-GameMode-Rust/
-├── src/
-│   ├── main.rs                 # Application entry, UI setup, event handling
-│   └── services/
-│       ├── mod.rs              # Module exports
-│       ├── gamemode.rs         # Core game mode logic
-│       ├── advanced_modules.rs # Hardware-aware tweaks
-│       ├── revi_tweaks.rs      # ReviOS playbook port
-│       ├── detector.rs         # Fullscreen game detection
-│       ├── power.rs            # Power plan management
-│       ├── memory.rs           # Memory optimization
-│       ├── network.rs          # Network isolation
-│       ├── process.rs          # Process management
-│       ├── registry.rs         # Registry operations
-│       ├── settings.rs         # Settings persistence
-│       ├── update.rs           # Update checker
-│       └── windows.rs          # Windows service manager
-├── ui/
-│   ├── app-window.slint        # Main UI definition
-│   └── components/             # Reusable UI components
-├── assets/
-│   └── app.ico                 # Application icon
-├── Cargo.toml                  # Rust dependencies
-└── build.rs                    # Build script (icon embedding)
-```
+---
 
 ## Safety & Reversibility
 
@@ -233,21 +187,11 @@ GameMode-Rust/
 - **Safe exit**: Cannot exit while game mode is active (prevents orphaned state)
 - **Explorer restart**: Explorer is automatically restarted on deactivation
 
-## Disclaimer
-
-This tool modifies Windows system settings, power plans, and registry values. While all changes are reversible:
-
-- Use at your own risk
-- Test in a non-production environment first
-- The tool requires administrator privileges
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details.
+---
 
 ## Credits
 
-- Original concept and C# implementation: https://x.com/x1lly
+- Original concept and program: [x1lly](https://x.com/x1lly)
 - ReviOS Playbook inspiration: [ReviOS](https://revi.cc/)
 - UI Framework: [Slint](https://slint.dev/)
 
