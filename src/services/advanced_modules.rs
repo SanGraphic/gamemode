@@ -25,6 +25,9 @@ pub struct AdvancedModulesService {
     
     // Process demotion - track demoted PIDs
     demoted_processes: Mutex<Vec<u32>>,
+    
+    // Bufferbloat - original TCP autotuning level
+    original_autotuning_level: Mutex<Option<String>>,
 }
 
 impl AdvancedModulesService {
@@ -38,6 +41,7 @@ impl AdvancedModulesService {
             original_hags_value: Mutex::new(None),
             // Pre-allocate with reasonable capacity to avoid reallocs
             demoted_processes: Mutex::new(Vec::with_capacity(32)),
+            original_autotuning_level: Mutex::new(None),
         }
     }
 
@@ -58,6 +62,9 @@ impl AdvancedModulesService {
         if settings.process_idle_demotion {
             self.enable_process_demotion();
         }
+        if settings.lower_bufferbloat {
+            self.enable_lower_bufferbloat();
+        }
     }
 
     /// Restore all tweaks to original values
@@ -76,6 +83,9 @@ impl AdvancedModulesService {
         }
         if settings.process_idle_demotion {
             self.restore_process_priority();
+        }
+        if settings.lower_bufferbloat {
+            self.restore_bufferbloat();
         }
     }
 
@@ -356,6 +366,116 @@ impl AdvancedModulesService {
         
         // Vec is dropped here, memory freed
         println!("[AdvancedModules] Process priorities restored ({} processes)", demoted.len());
+    }
+
+    // =========================================================================
+    // 12. LOWER BUFFERBLOAT
+    // Disable TCP autotuning to reduce network latency spikes
+    // Command: netsh int tcp set global autotuninglevel=disabled
+    // =========================================================================
+
+    fn enable_lower_bufferbloat(&self) {
+        use std::process::Command;
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        // Get current autotuning level first
+        let output = Command::new("netsh")
+            .args(["int", "tcp", "show", "global"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        if let Ok(out) = output {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            // Parse the current autotuning level
+            for line in stdout.lines() {
+                if line.to_lowercase().contains("auto-tuning") || line.to_lowercase().contains("autotuning") {
+                    // Extract the value (e.g., "normal", "disabled", "highlyrestricted")
+                    if let Some(level) = line.split(':').nth(1) {
+                        let level = level.trim().to_lowercase();
+                        *self.original_autotuning_level.lock().unwrap() = Some(level);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Set autotuning to disabled
+        let _ = Command::new("netsh")
+            .args(["int", "tcp", "set", "global", "autotuninglevel=disabled"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        println!("[AdvancedModules] Bufferbloat reduction enabled (TCP autotuning disabled)");
+    }
+
+    fn restore_bufferbloat(&self) {
+        use std::process::Command;
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        // Restore original autotuning level
+        let original = self.original_autotuning_level.lock().unwrap().clone();
+        let level = original.unwrap_or_else(|| "normal".to_string());
+        
+        let _ = Command::new("netsh")
+            .args(["int", "tcp", "set", "global", &format!("autotuninglevel={}", level)])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        println!("[AdvancedModules] Bufferbloat setting restored (TCP autotuning: {})", level);
+    }
+
+    // =========================================================================
+    // PERMANENT TOGGLE FUNCTIONS (Can be called without game mode)
+    // =========================================================================
+
+    /// Get current TCP autotuning status
+    pub fn get_bufferbloat_status() -> bool {
+        use std::process::Command;
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        let output = Command::new("netsh")
+            .args(["int", "tcp", "show", "global"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        if let Ok(out) = output {
+            let stdout = String::from_utf8_lossy(&out.stdout).to_lowercase();
+            // If autotuning is disabled, bufferbloat reduction is ON
+            stdout.contains("disabled")
+        } else {
+            false
+        }
+    }
+
+    /// Permanently enable bufferbloat reduction (disable TCP autotuning)
+    pub fn set_bufferbloat_enabled() {
+        use std::process::Command;
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        let _ = Command::new("netsh")
+            .args(["int", "tcp", "set", "global", "autotuninglevel=disabled"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        println!("[AdvancedModules] Bufferbloat reduction permanently enabled");
+    }
+
+    /// Permanently disable bufferbloat reduction (restore TCP autotuning to normal)
+    pub fn set_bufferbloat_disabled() {
+        use std::process::Command;
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        let _ = Command::new("netsh")
+            .args(["int", "tcp", "set", "global", "autotuninglevel=normal"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        
+        println!("[AdvancedModules] Bufferbloat reduction permanently disabled (TCP autotuning normal)");
     }
 
     // =========================================================================

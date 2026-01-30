@@ -75,8 +75,12 @@ fn main() -> Result<(), slint::PlatformError> {
         mmcss_priority_boost: loaded_settings.advanced_modules.mmcss_priority_boost,
         enable_hags: loaded_settings.advanced_modules.enable_hags,
         process_idle_demotion: loaded_settings.advanced_modules.process_idle_demotion,
+        lower_bufferbloat: loaded_settings.advanced_modules.lower_bufferbloat,
     };
     ui.set_advanced_settings(initial_advanced_ui);
+    
+    // Initialize bufferbloat status from current system state
+    ui.set_bufferbloat_active(AdvancedModulesService::get_bufferbloat_status());
     
     // Create advanced modules service
     let advanced_modules_service = Arc::new(AdvancedModulesService::new());
@@ -302,7 +306,25 @@ fn main() -> Result<(), slint::PlatformError> {
         guard.advanced_modules.mmcss_priority_boost = new_advanced.mmcss_priority_boost;
         guard.advanced_modules.enable_hags = new_advanced.enable_hags;
         guard.advanced_modules.process_idle_demotion = new_advanced.process_idle_demotion;
+        guard.advanced_modules.lower_bufferbloat = new_advanced.lower_bufferbloat;
         ss_clone_2.save(&guard);
+    });
+
+    // 7c. Permanent Bufferbloat Toggle (On/Off button)
+    let ui_handle_bufferbloat = ui.as_weak();
+    ui.on_toggle_bufferbloat_permanent(move || {
+        let current_state = AdvancedModulesService::get_bufferbloat_status();
+        if current_state {
+            // Currently ON, turn it OFF
+            AdvancedModulesService::set_bufferbloat_disabled();
+        } else {
+            // Currently OFF, turn it ON
+            AdvancedModulesService::set_bufferbloat_enabled();
+        }
+        // Update UI state
+        let _ = ui_handle_bufferbloat.upgrade_in_event_loop(move |ui| {
+            ui.set_bufferbloat_active(!current_state);
+        });
     });
 
     // 8. Updates

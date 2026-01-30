@@ -14,13 +14,17 @@ export struct AdvancedSettings {
     enable_hags: bool,
     // 11. Process Idle Optimization
     process_idle_demotion: bool,
+    // 12. Lower Bufferbloat (Network)
+    lower_bufferbloat: bool,
 }
 
 export component AdvancedPopup inherits Rectangle {
     in-out property <bool> popup_visible: false;
     in-out property <AdvancedSettings> advanced_settings;
+    in-out property <bool> bufferbloat_active: false; // Current system state
     callback settings_changed(AdvancedSettings);
     callback close_popup();
+    callback toggle_bufferbloat_permanent(); // Toggle permanent on/off
 
     // Full screen overlay
     width: 100%;
@@ -43,7 +47,7 @@ export component AdvancedPopup inherits Rectangle {
     // Popup Card - matches main app styling
     Rectangle {
         width: 320px;
-        height: 440px;
+        height: 520px;
         x: (parent.width - self.width) / 2;
         y: root.popup_visible ? (parent.height - self.height) / 2 : parent.height;
         background: #070812;  // Match main app background
@@ -251,6 +255,69 @@ export component AdvancedPopup inherits Rectangle {
             Rectangle { height: 2px; }
             Text {
                 text: "Demote non-game processes to idle priority";
+                color: #4B5563;
+                font-family: "Segoe UI";
+                font-size: 11px;
+            }
+
+            Rectangle { height: 16px; }
+            Rectangle { height: 1px; background: #FFFFFF15; }
+            Rectangle { height: 12px; }
+
+            // Network Section
+            Text {
+                text: "NETWORK OPTIMIZATIONS";
+                color: #6B7280;
+                font-family: "Segoe UI";
+                font-size: 10px;
+                font-weight: 600;
+            }
+            Rectangle { height: 12px; }
+
+            // 12. Lower Bufferbloat with permanent toggle button
+            HorizontalLayout {
+                alignment: space-between;
+                
+                Switch {
+                    text: "Lower Bufferbloat";
+                    checked: root.advanced_settings.lower_bufferbloat;
+                    toggled(val) => {
+                        root.advanced_settings.lower_bufferbloat = val;
+                        root.settings_changed(root.advanced_settings);
+                    }
+                }
+                
+                // Permanent On/Off button
+                TouchArea {
+                    width: 42px;
+                    height: 24px;
+                    mouse-cursor: pointer;
+                    clicked => { root.toggle_bufferbloat_permanent(); }
+                    
+                    Rectangle {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 4px;
+                        background: root.bufferbloat_active ? #22C55E : #4B5563;
+                        border-width: 1px;
+                        border-color: root.bufferbloat_active ? #16A34A : #6B7280;
+                        animate background { duration: 150ms; }
+                        
+                        Text {
+                            text: root.bufferbloat_active ? "ON" : "OFF";
+                            color: #FFFFFF;
+                            font-family: "Segoe UI";
+                            font-size: 10px;
+                            font-weight: 600;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+            Rectangle { height: 2px; }
+            Text {
+                text: "Disable TCP autotuning for lower latency";
                 color: #4B5563;
                 font-family: "Segoe UI";
                 font-size: 11px;

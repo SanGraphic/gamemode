@@ -28,7 +28,7 @@ Credits to [x1lly](https://x.com/x1lly) for the original program. Peace.
 - Apply High Performance Power Plan
 - Disable Telemetry & Unnecessary Services
 - ReviOS-Style Registry Optimizations
-- Advanced Modules: Core Parking, MMCSS Boost, Large Pages, HAGS
+- Advanced Modules: Core Parking, MMCSS Boost, Large Pages, HAGS, Lower Bufferbloat
 - System Tray Integration with Memory Trimming
 
 ## What does it Actually do? (Nerd Summary)
@@ -44,6 +44,7 @@ Credits to [x1lly](https://x.com/x1lly) for the original program. Peace.
 - **Large System Pages**: Better TLB efficiency for reduced memory access latency
 - **HAGS**: Hardware-Accelerated GPU Scheduling for lower latency
 - **Process Idle Demotion**: Demotes background processes to idle priority
+- **Lower Bufferbloat**: Disables TCP autotuning for lower network latency (ON by default, with permanent On/Off toggle)
 - **VBS/HVCI disabled** for gaming performance
 - **Spectre/Meltdown mitigations disabled** (optional performance boost)
 - **MMCSS Game priority maximized**

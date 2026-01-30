@@ -50,7 +50,7 @@ pub struct AppSettings {
 
 /// Advanced module settings for hardware-aware 1% low optimizations
 /// These are toggleable and only active when game mode is active
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AdvancedModuleSettings {
     /// Disable core parking to prevent micro-stutter from core wake latency
     /// Best for: 6+ core systems
@@ -76,6 +76,24 @@ pub struct AdvancedModuleSettings {
     /// Reduces CPU contention from background processes
     #[serde(default)]
     pub process_idle_demotion: bool,
+    
+    /// Lower bufferbloat by disabling TCP autotuning
+    /// Reduces network latency spikes during gaming (default: true)
+    #[serde(default = "default_true")]
+    pub lower_bufferbloat: bool,
+}
+
+impl Default for AdvancedModuleSettings {
+    fn default() -> Self {
+        Self {
+            disable_core_parking: false,
+            enable_large_pages: false,
+            mmcss_priority_boost: false,
+            enable_hags: false,
+            process_idle_demotion: false,
+            lower_bufferbloat: true, // ON by default
+        }
+    }
 }
 
 fn default_true() -> bool { true }

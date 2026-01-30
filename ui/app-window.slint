@@ -28,6 +28,7 @@ export component AppWindow inherits Window {
     callback toggle_game_mode(bool);
     callback settings_changed(AppSettings);
     callback advanced_settings_changed(AdvancedSettings);
+    callback toggle_bufferbloat_permanent();
     callback export_specs();
     callback close_app();
     callback check_updates();
@@ -35,6 +36,7 @@ export component AppWindow inherits Window {
 
     in-out property <bool> active: false;
     in-out property <bool> show_advanced_popup: false;
+    in-out property <bool> bufferbloat_active: false;
     in-out property <AppSettings> settings: {
         suspend_explorer: false,
         suspend_browsers: true,
@@ -48,7 +50,8 @@ export component AppWindow inherits Window {
         enable_large_pages: false,
         mmcss_priority_boost: false,
         enable_hags: false,
-        process_idle_demotion: false
+        process_idle_demotion: false,
+        lower_bufferbloat: true
     };
     
     // Height adjusted for MPO toggle + Advanced button
@@ -388,9 +391,13 @@ export component AppWindow inherits Window {
             if root.show_advanced_popup: AdvancedPopup {
                 popup_visible: root.show_advanced_popup;
                 advanced_settings: root.advanced_settings;
+                bufferbloat_active: root.bufferbloat_active;
                 settings_changed(new_settings) => {
                     root.advanced_settings = new_settings;
                     root.advanced_settings_changed(new_settings);
+                }
+                toggle_bufferbloat_permanent => {
+                    root.toggle_bufferbloat_permanent();
                 }
                 close_popup => {
                     root.show_advanced_popup = false;
