@@ -2,6 +2,7 @@
 // Consistent UI with main app styling
 
 import { Switch } from "switch.slint";
+import { ScrollView } from "std-widgets.slint";
 
 export struct AdvancedSettings {
     // 1. Core Parking Disable (CPU-specific, 6+ cores)
@@ -122,206 +123,219 @@ export component AdvancedPopup inherits Rectangle {
 
             Rectangle { height: 16px; }
 
-            // CPU Section Header - matches GAME MODE MODULES style
-            Text {
-                text: "CPU OPTIMIZATIONS";
-                color: #6B7280;
-                font-family: "Segoe UI";
-                font-size: 10px;
-                font-weight: 600;
-            }
-            Rectangle { height: 12px; }
+            // Scrollable Content Area
+            ScrollView {
+                viewport-width: self.width;
+                viewport-height: content_layout.min-height;
 
-            // 1. Core Parking
-            Switch {
-                text: "Disable Core Parking";
-                checked: root.advanced_settings.disable_core_parking;
-                toggled(val) => {
-                    root.advanced_settings.disable_core_parking = val;
-                    root.settings_changed(root.advanced_settings);
-                }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "Prevents micro-stutter from core wake latency";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
-            }
+                content_layout := VerticalLayout {
+                    spacing: 0px;
+                    // Extra padding at bottom for scroll space and right for scrollbar
+                    padding-bottom: 20px;
+                    padding-right: 16px;
 
-            Rectangle { height: 12px; }
-
-            // 5. MMCSS Priority
-            Switch {
-                text: "MMCSS Priority Boost";
-                checked: root.advanced_settings.mmcss_priority_boost;
-                toggled(val) => {
-                    root.advanced_settings.mmcss_priority_boost = val;
-                    root.settings_changed(root.advanced_settings);
-                }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "Boost multimedia scheduler for game threads";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
-            }
-
-            Rectangle { height: 16px; }
-            Rectangle { height: 1px; background: #FFFFFF15; }
-            Rectangle { height: 12px; }
-
-            // Memory Section
-            Text {
-                text: "MEMORY OPTIMIZATIONS";
-                color: #6B7280;
-                font-family: "Segoe UI";
-                font-size: 10px;
-                font-weight: 600;
-            }
-            Rectangle { height: 12px; }
-
-            // 4. Large Pages
-            Switch {
-                text: "Enable Large Pages";
-                checked: root.advanced_settings.enable_large_pages;
-                toggled(val) => {
-                    root.advanced_settings.enable_large_pages = val;
-                    root.settings_changed(root.advanced_settings);
-                }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "Better TLB efficiency (16GB+ RAM, reboot required)";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
-            }
-
-            Rectangle { height: 16px; }
-            Rectangle { height: 1px; background: #FFFFFF15; }
-            Rectangle { height: 12px; }
-
-            // GPU Section
-            Text {
-                text: "GPU OPTIMIZATIONS";
-                color: #6B7280;
-                font-family: "Segoe UI";
-                font-size: 10px;
-                font-weight: 600;
-            }
-            Rectangle { height: 12px; }
-
-            // 8. HAGS
-            Switch {
-                text: "Hardware GPU Scheduling";
-                checked: root.advanced_settings.enable_hags;
-                toggled(val) => {
-                    root.advanced_settings.enable_hags = val;
-                    root.settings_changed(root.advanced_settings);
-                }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "RTX 30/40, RX 6000/7000 (reboot required)";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
-            }
-
-            Rectangle { height: 16px; }
-            Rectangle { height: 1px; background: #FFFFFF15; }
-            Rectangle { height: 12px; }
-
-            // Process Section
-            Text {
-                text: "PROCESS OPTIMIZATIONS";
-                color: #6B7280;
-                font-family: "Segoe UI";
-                font-size: 10px;
-                font-weight: 600;
-            }
-            Rectangle { height: 12px; }
-
-            // 11. Process Idle Demotion
-            Switch {
-                text: "Process Idle Demotion";
-                checked: root.advanced_settings.process_idle_demotion;
-                toggled(val) => {
-                    root.advanced_settings.process_idle_demotion = val;
-                    root.settings_changed(root.advanced_settings);
-                }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "Demote non-game processes to idle priority";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
-            }
-
-            Rectangle { height: 16px; }
-            Rectangle { height: 1px; background: #FFFFFF15; }
-            Rectangle { height: 12px; }
-
-            // Network Section
-            Text {
-                text: "NETWORK OPTIMIZATIONS";
-                color: #6B7280;
-                font-family: "Segoe UI";
-                font-size: 10px;
-                font-weight: 600;
-            }
-            Rectangle { height: 12px; }
-
-            // 12. Lower Bufferbloat with permanent toggle button
-            HorizontalLayout {
-                alignment: space-between;
-                
-                Switch {
-                    text: "Lower Bufferbloat";
-                    checked: root.advanced_settings.lower_bufferbloat;
-                    toggled(val) => {
-                        root.advanced_settings.lower_bufferbloat = val;
-                        root.settings_changed(root.advanced_settings);
+                    // CPU Section Header - matches GAME MODE MODULES style
+                    Text {
+                        text: "CPU OPTIMIZATIONS";
+                        color: #6B7280;
+                        font-family: "Segoe UI";
+                        font-size: 10px;
+                        font-weight: 600;
                     }
-                }
-                
-                // Permanent On/Off button
-                TouchArea {
-                    width: 42px;
-                    height: 24px;
-                    mouse-cursor: pointer;
-                    clicked => { root.toggle_bufferbloat_permanent(); }
-                    
-                    Rectangle {
-                        width: 100%;
-                        height: 100%;
-                        border-radius: 4px;
-                        background: root.bufferbloat_active ? #22C55E : #4B5563;
-                        border-width: 1px;
-                        border-color: root.bufferbloat_active ? #16A34A : #6B7280;
-                        animate background { duration: 150ms; }
-                        
-                        Text {
-                            text: root.bufferbloat_active ? "ON" : "OFF";
-                            color: #FFFFFF;
-                            font-family: "Segoe UI";
-                            font-size: 10px;
-                            font-weight: 600;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
+                    Rectangle { height: 12px; }
+
+                    // 1. Core Parking
+                    Switch {
+                        text: "Disable Core Parking";
+                        checked: root.advanced_settings.disable_core_parking;
+                        toggled(val) => {
+                            root.advanced_settings.disable_core_parking = val;
+                            root.settings_changed(root.advanced_settings);
                         }
                     }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "Prevents micro-stutter from core wake latency";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
+
+                    Rectangle { height: 12px; }
+
+                    // 5. MMCSS Priority
+                    Switch {
+                        text: "MMCSS Priority Boost";
+                        checked: root.advanced_settings.mmcss_priority_boost;
+                        toggled(val) => {
+                            root.advanced_settings.mmcss_priority_boost = val;
+                            root.settings_changed(root.advanced_settings);
+                        }
+                    }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "Boost multimedia scheduler for game threads";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
+
+                    Rectangle { height: 16px; }
+                    Rectangle { height: 1px; background: #FFFFFF15; }
+                    Rectangle { height: 12px; }
+
+                    // Memory Section
+                    Text {
+                        text: "MEMORY OPTIMIZATIONS";
+                        color: #6B7280;
+                        font-family: "Segoe UI";
+                        font-size: 10px;
+                        font-weight: 600;
+                    }
+                    Rectangle { height: 12px; }
+
+                    // 4. Large Pages
+                    Switch {
+                        text: "Enable Large Pages";
+                        checked: root.advanced_settings.enable_large_pages;
+                        toggled(val) => {
+                            root.advanced_settings.enable_large_pages = val;
+                            root.settings_changed(root.advanced_settings);
+                        }
+                    }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "Better TLB efficiency (16GB+ RAM, reboot required)";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
+
+                    Rectangle { height: 16px; }
+                    Rectangle { height: 1px; background: #FFFFFF15; }
+                    Rectangle { height: 12px; }
+
+                    // GPU Section
+                    Text {
+                        text: "GPU OPTIMIZATIONS";
+                        color: #6B7280;
+                        font-family: "Segoe UI";
+                        font-size: 10px;
+                        font-weight: 600;
+                    }
+                    Rectangle { height: 12px; }
+
+                    // 8. HAGS
+                    Switch {
+                        text: "Hardware GPU Scheduling";
+                        checked: root.advanced_settings.enable_hags;
+                        toggled(val) => {
+                            root.advanced_settings.enable_hags = val;
+                            root.settings_changed(root.advanced_settings);
+                        }
+                    }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "RTX 30/40, RX 6000/7000 (reboot required)";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
+
+                    Rectangle { height: 16px; }
+                    Rectangle { height: 1px; background: #FFFFFF15; }
+                    Rectangle { height: 12px; }
+
+                    // Process Section
+                    Text {
+                        text: "PROCESS OPTIMIZATIONS";
+                        color: #6B7280;
+                        font-family: "Segoe UI";
+                        font-size: 10px;
+                        font-weight: 600;
+                    }
+                    Rectangle { height: 12px; }
+
+                    // 11. Process Idle Demotion
+                    Switch {
+                        text: "Process Idle Demotion";
+                        checked: root.advanced_settings.process_idle_demotion;
+                        toggled(val) => {
+                            root.advanced_settings.process_idle_demotion = val;
+                            root.settings_changed(root.advanced_settings);
+                        }
+                    }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "Demote non-game processes to idle priority";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
+
+                    Rectangle { height: 16px; }
+                    Rectangle { height: 1px; background: #FFFFFF15; }
+                    Rectangle { height: 12px; }
+
+                    // Network Section
+                    Text {
+                        text: "NETWORK OPTIMIZATIONS";
+                        color: #6B7280;
+                        font-family: "Segoe UI";
+                        font-size: 10px;
+                        font-weight: 600;
+                    }
+                    Rectangle { height: 12px; }
+
+                    // 12. Lower Bufferbloat with permanent toggle button
+                    HorizontalLayout {
+                        alignment: space-between;
+                        
+                        Switch {
+                            text: "Lower Bufferbloat";
+                            checked: root.advanced_settings.lower_bufferbloat;
+                            toggled(val) => {
+                                root.advanced_settings.lower_bufferbloat = val;
+                                root.settings_changed(root.advanced_settings);
+                            }
+                        }
+                        
+                        // Permanent On/Off button
+                        TouchArea {
+                            width: 42px;
+                            height: 24px;
+                            mouse-cursor: pointer;
+                            clicked => { root.toggle_bufferbloat_permanent(); }
+                            
+                            Rectangle {
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 4px;
+                                background: root.bufferbloat_active ? #22C55E : #4B5563;
+                                border-width: 1px;
+                                border-color: root.bufferbloat_active ? #16A34A : #6B7280;
+                                animate background { duration: 150ms; }
+                                
+                                Text {
+                                    text: root.bufferbloat_active ? "ON" : "OFF";
+                                    color: #FFFFFF;
+                                    font-family: "Segoe UI";
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                    Rectangle { height: 2px; }
+                    Text {
+                        text: "Disable TCP autotuning for lower latency";
+                        color: #4B5563;
+                        font-family: "Segoe UI";
+                        font-size: 11px;
+                    }
                 }
-            }
-            Rectangle { height: 2px; }
-            Text {
-                text: "Disable TCP autotuning for lower latency";
-                color: #4B5563;
-                font-family: "Segoe UI";
-                font-size: 11px;
             }
         }
     }

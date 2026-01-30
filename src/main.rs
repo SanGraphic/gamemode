@@ -4,6 +4,11 @@ use slint::ComponentHandle;
 use std::sync::{Arc, Mutex, atomic::{AtomicBool, AtomicU32, Ordering}};
 use std::thread;
 
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 mod services;
 use services::{
     settings::SettingsService,
@@ -75,7 +80,59 @@ fn get_gpu_info() -> String {
     }
 }
 
+/// Enable Windows 11 Efficiency Mode (EcoQoS)
+/// Enable Windows 11 Efficiency Mode (EcoQoS)
+fn enable_efficiency_mode() {
+    use windows::Win32::System::Threading::{
+        SetProcessInformation, SetPriorityClass, GetCurrentProcess, 
+        PROCESS_POWER_THROTTLING_STATE, ProcessPowerThrottling,
+        PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+        IDLE_PRIORITY_CLASS
+    };
+    use std::ffi::c_void;
+
+    unsafe {
+        // 1. Set process to EcoQoS (Power Throttling)
+        let mut state = PROCESS_POWER_THROTTLING_STATE {
+            Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask: PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+            StateMask: PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+        };
+
+        let _ = SetProcessInformation(
+            GetCurrentProcess(),
+            ProcessPowerThrottling,
+            &mut state as *mut _ as *mut c_void,
+            std::mem::size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32,
+        );
+
+        // 2. Set Priority to IDLE (Low) to trigger "Efficiency Mode" UI leaf in Task Manager
+        let _ = SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
+    }
+}
+
+/// Aggressively trim the process working set to reduce reported RAM usage
+fn trim_own_memory() {
+    use windows::Win32::System::ProcessStatus::EmptyWorkingSet;
+    use windows::Win32::System::Threading::GetCurrentProcess;
+
+    unsafe {
+        let _ = EmptyWorkingSet(GetCurrentProcess());
+    }
+}
+
 fn main() -> Result<(), slint::PlatformError> {
+    // Enable Efficiency Mode
+    enable_efficiency_mode();
+
+    // Periodically trim memory to keep footprint minimal (every 5s)
+    thread::spawn(|| {
+        loop {
+            trim_own_memory();
+            thread::sleep(std::time::Duration::from_secs(5));
+        }
+    });
+
     // === RENDERING OPTIMIZATION ===
     std::env::set_var("SLINT_FONT_HINTING", "none");
     std::env::set_var("SLINT_ENABLE_SUBPIXEL_RENDERING", "1");
