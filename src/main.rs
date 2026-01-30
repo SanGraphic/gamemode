@@ -3,8 +3,6 @@
 use slint::ComponentHandle;
 use std::sync::{Arc, Mutex, atomic::{AtomicBool, AtomicU32, Ordering}};
 use std::thread;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 mod services;
 use services::{
@@ -30,17 +28,6 @@ fn is_process_running(pid: u32) -> bool {
         } else {
             false
         }
-    }
-}
-
-/// Trim our own working set to minimize memory when idle/hidden
-#[inline]
-fn trim_own_memory() {
-    use windows::Win32::System::ProcessStatus::EmptyWorkingSet;
-    use windows::Win32::System::Threading::GetCurrentProcess;
-    
-    unsafe {
-        let _ = EmptyWorkingSet(GetCurrentProcess());
     }
 }
 
@@ -577,108 +564,71 @@ fn main() -> Result<(), slint::PlatformError> {
         });
     });
 
-    // 10. System Tray - Proper implementation with timer-based event polling
-    use tray_icon::{TrayIconBuilder, menu::{Menu, MenuItem}, MouseButton, MouseButtonState};
+    // 10. Clean Close Handler - Deactivate game mode, wait, then exit
+    let is_active_for_close = is_game_mode_active.clone();
+    let settings_for_close = app_settings.clone();
+    let gamemode_for_close = gamemode_service.clone();
+    let advanced_modules_for_close = advanced_modules_service.clone();
+    let monitored_pid_for_close = monitored_pid.clone();
+    let is_monitoring_for_close = is_monitoring.clone();
     
-    let tray_menu = Menu::new();
-    let show_item = MenuItem::new("Show", true, None);
-    let exit_item = MenuItem::new("Exit", true, None);
-    let _ = tray_menu.append_items(&[&show_item, &exit_item]);
-
-    let icon = {
-        let icon_bytes = include_bytes!("../ui/assets/appicon.png");
-        let img = image::load_from_memory(icon_bytes).expect("Failed to load icon");
-        let rgba = img.resize(32, 32, image::imageops::FilterType::Lanczos3).to_rgba8();
-        let (width, height) = rgba.dimensions();
-        tray_icon::Icon::from_rgba(rgba.into_raw(), width, height).expect("Failed to create icon")
-    };
-    
-    // Keep tray icon alive by storing in Rc
-    let tray_icon = Rc::new(RefCell::new(Some(
-        TrayIconBuilder::new()
-            .with_menu(Box::new(tray_menu))
-            .with_tooltip("Xilly Game Mode")
-            .with_icon(icon)
-            .build()
-            .unwrap()
-    )));
-
-    let menu_channel = tray_icon::menu::MenuEvent::receiver();
-    let tray_channel = tray_icon::TrayIconEvent::receiver();
-
-    let show_id = show_item.id().clone();
-    let exit_id = exit_item.id().clone();
-    let is_active_for_tray = is_game_mode_active.clone();
-    
-    // Use Slint timer for tray event polling (runs in main event loop)
-    let ui_handle_tray = ui.as_weak();
-    let tray_timer = slint::Timer::default();
-    let tray_icon_keeper = tray_icon.clone();
-    tray_timer.start(
-        slint::TimerMode::Repeated,
-        std::time::Duration::from_millis(100),
-        move || {
-            // Keep tray icon reference alive
-            let _keep = tray_icon_keeper.borrow();
-            
-            // Process menu events
-            while let Ok(event) = menu_channel.try_recv() {
-                if event.id == exit_id {
-                    // Only allow exit if game mode is NOT active
-                    if !is_active_for_tray.load(Ordering::SeqCst) {
-                        std::process::exit(0);
-                    } else {
-                        // Show message that user must deactivate game mode first
-                        use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_OK, MB_ICONWARNING};
-                        use windows::Win32::Foundation::HWND;
-                        use windows::core::HSTRING;
-                        unsafe {
-                            MessageBoxW(
-                                HWND::default(), 
-                                &HSTRING::from("Cannot exit while Game Mode is active.\nPlease deactivate Game Mode first."), 
-                                &HSTRING::from("Xilly Game Mode"), 
-                                MB_OK | MB_ICONWARNING
-                            );
-                        }
-                    }
-                } else if event.id == show_id {
-                    if let Some(ui) = ui_handle_tray.upgrade() {
-                        let _ = ui.window().show();
-                        let _ = ui.window().set_minimized(false);
-                    }
-                }
-            }
-            
-            // Process tray click events
-            while let Ok(event) = tray_channel.try_recv() {
-                if let tray_icon::TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
-                    if let Some(ui) = ui_handle_tray.upgrade() {
-                        if ui.window().is_visible() {
-                            let _ = ui.window().hide();
-                            trim_own_memory();
-                        } else {
-                            let _ = ui.window().show();
-                            let _ = ui.window().set_minimized(false);
-                        }
-                    }
-                }
-            }
-        }
-    );
-
-    // Close button always hides to tray (never exits)
-    let ui_handle_close = ui.as_weak();
     ui.on_close_app(move || {
-        if let Some(ui) = ui_handle_close.upgrade() {
-            // Always hide to tray (don't exit)
-            let _ = ui.window().hide();
-            // Trim memory when hiding to tray for minimal idle footprint
-            trim_own_memory();
+        if is_active_for_close.load(Ordering::SeqCst) {
+            // Game mode is active - deactivate first, then wait 3 seconds, then exit
+            let settings_clone = settings_for_close.clone();
+            let gamemode_clone = gamemode_for_close.clone();
+            let advanced_modules_clone = advanced_modules_for_close.clone();
+            let active_flag = is_active_for_close.clone();
+            let pid_ref = monitored_pid_for_close.clone();
+            let monitoring_ref = is_monitoring_for_close.clone();
+            
+            thread::spawn(move || {
+                // Stop monitoring
+                monitoring_ref.store(false, Ordering::SeqCst);
+                pid_ref.store(0, Ordering::SeqCst);
+                
+                // Extract settings
+                let (options, advanced, advanced_modules) = {
+                    let guard = settings_clone.lock().unwrap();
+                    (
+                        GameModeOptions {
+                            suspend_explorer: guard.suspend_explorer,
+                            suspend_browsers: guard.suspend_browsers,
+                            suspend_launchers: guard.suspend_launchers,
+                            isolate_network: guard.isolate_network,
+                        },
+                        guard.advanced_tweaks,
+                        guard.advanced_modules.clone(),
+                    )
+                };
+                
+                // Disable game mode
+                if let Ok(svc) = gamemode_clone.lock() {
+                    svc.disable_game_mode(&options);
+                }
+                
+                // Restore ReviOS tweaks if they were enabled
+                if advanced {
+                    ReviTweaksService::disable();
+                }
+                
+                // Restore advanced modules
+                advanced_modules_clone.disable(&advanced_modules);
+                
+                // Clear active flag
+                active_flag.store(false, Ordering::SeqCst);
+                
+                // Wait 3 seconds after deactivation to ensure clean state
+                thread::sleep(std::time::Duration::from_secs(3));
+                
+                // Exit cleanly
+                std::process::exit(0);
+            });
+        } else {
+            // Game mode not active - exit immediately
+            std::process::exit(0);
         }
     });
-    
-    // Keep tray timer alive
-    let _tray_timer_keeper = tray_timer;
 
     // 11. DWM Transparency Fix
     let ui_handle_dwm = ui.as_weak();
