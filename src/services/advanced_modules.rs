@@ -443,8 +443,13 @@ impl AdvancedModulesService {
         
         if let Ok(out) = output {
             let stdout = String::from_utf8_lossy(&out.stdout).to_lowercase();
-            // If autotuning is disabled, bufferbloat reduction is ON
-            stdout.contains("disabled")
+            // Parse line by line to ensure we are checking the correct setting
+            for line in stdout.lines() {
+                if line.contains("auto-tuning") || line.contains("autotuning") {
+                    return line.contains("disabled");
+                }
+            }
+            false
         } else {
             false
         }
