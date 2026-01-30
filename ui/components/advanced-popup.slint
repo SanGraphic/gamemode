@@ -47,7 +47,8 @@ export component AdvancedPopup inherits Rectangle {
     // Popup Card - matches main app styling
     Rectangle {
         width: 320px;
-        height: 520px;
+        // Increased height so the new \"Lower Bufferbloat\" module is fully visible
+        height: 580px;
         x: (parent.width - self.width) / 2;
         y: root.popup_visible ? (parent.height - self.height) / 2 : parent.height;
         background: #070812;  // Match main app background
