@@ -31,6 +31,50 @@ fn is_process_running(pid: u32) -> bool {
     }
 }
 
+
+/// Fetch GPU info using DXGI for accurate VRAM reporting
+fn get_gpu_info() -> String {
+    use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory1, IDXGIFactory1};
+
+
+    unsafe {
+        let factory: Result<IDXGIFactory1, _> = CreateDXGIFactory1();
+        if let Ok(factory) = factory {
+            let mut i = 0;
+            let mut gpus = Vec::new();
+
+            while let Ok(adapter) = factory.EnumAdapters1(i) {
+                if let Ok(desc) = adapter.GetDesc1() {
+                    let name = String::from_utf16_lossy(&desc.Description)
+                        .trim_matches('\0')
+                        .to_string();
+                    
+                    let vram_gb = desc.DedicatedVideoMemory as f64 / 1073741824.0;
+                    
+                    // Filter out Microsoft Basic Render Driver unless it's the only one
+                    // and only show if it has some VRAM or meaningful name
+                    if name != "Microsoft Basic Render Driver" || vram_gb > 0.0 {
+                        if vram_gb > 0.1 {
+                             gpus.push(format!("{} ({:.1} GB)", name, vram_gb));
+                        } else {
+                             gpus.push(name);
+                        }
+                    }
+                }
+                i += 1;
+            }
+
+            if gpus.is_empty() {
+                 "Unknown".to_string()
+            } else {
+                 gpus.join("\n       ")
+            }
+        } else {
+            "Unknown (DXGI Init Failed)".to_string()
+        }
+    }
+}
+
 fn main() -> Result<(), slint::PlatformError> {
     // === RENDERING OPTIMIZATION ===
     std::env::set_var("SLINT_FONT_HINTING", "none");
@@ -355,51 +399,8 @@ fn main() -> Result<(), slint::PlatformError> {
                 .unwrap_or_else(|_| "Unknown".to_string());
 
             // GPUs: All video controllers (iGPU + dGPU)
-            let gpus = Command::new("wmic")
-                .args(["path", "win32_VideoController", "get", "name,AdapterRAM", "/format:list"])
-                .creation_flags(CREATE_NO_WINDOW)
-                .output()
-                .map(|o| {
-                    let s = String::from_utf8_lossy(&o.stdout);
-                    let mut gpu_list: Vec<String> = Vec::new();
-                    let mut current_name = String::new();
-                    let mut current_vram: u64 = 0;
-                    
-                    for line in s.lines() {
-                        let line = line.trim();
-                        if let Some(v) = line.strip_prefix("Name=") {
-                            if !current_name.is_empty() {
-                                // Save previous GPU
-                                if current_vram > 0 {
-                                    let vram_gb = current_vram as f64 / 1073741824.0;
-                                    gpu_list.push(format!("{} ({:.1} GB)", current_name, vram_gb));
-                                } else {
-                                    gpu_list.push(current_name.clone());
-                                }
-                            }
-                            current_name = v.trim().to_string();
-                            current_vram = 0;
-                        } else if let Some(v) = line.strip_prefix("AdapterRAM=") {
-                            current_vram = v.trim().parse().unwrap_or(0);
-                        }
-                    }
-                    // Don't forget the last GPU
-                    if !current_name.is_empty() {
-                        if current_vram > 0 {
-                            let vram_gb = current_vram as f64 / 1073741824.0;
-                            gpu_list.push(format!("{} ({:.1} GB)", current_name, vram_gb));
-                        } else {
-                            gpu_list.push(current_name);
-                        }
-                    }
-                    
-                    if gpu_list.is_empty() {
-                        "Unknown".to_string()
-                    } else {
-                        gpu_list.join("\n       ")
-                    }
-                })
-                .unwrap_or_else(|_| "Unknown".to_string());
+            // GPUs: All video controllers (iGPU + dGPU) using DXGI for accurate VRAM
+            let gpus = get_gpu_info();
 
             // RAM: Total capacity and speed
             let ram_info = Command::new("wmic")
