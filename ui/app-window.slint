@@ -54,8 +54,8 @@ export component AppWindow inherits Window {
         lower_bufferbloat: true
     };
     
-    // Height adjusted for MPO toggle + Advanced button
-    in-out property <length> content-height: active ? 320px : 700px;
+    // Height adjusted for title bar + content
+    in-out property <length> content-height: active ? 200px : 580px;
     animate content-height { duration: 500ms; easing: cubic-bezier(0.33, 0, 0.67, 1); } 
 
     Rectangle {
@@ -73,70 +73,114 @@ export component AppWindow inherits Window {
             clip: true;
 
             VerticalLayout {
-                padding-top: 20px;
-                alignment: center;
+                padding-top: 0px;
+                alignment: start;
                 width: 100%;
 
-                // Logo Card
-                HorizontalLayout {
-                    alignment: center;
+                // Title Bar (Windows-style header)
+                Rectangle {
+                    width: 100%;
+                    height: 84px;
+                    background: #070812;
+                    border-radius: 40px;
+                    
+                    // Only round the top corners for title bar, but we need bottom to blend
                     Rectangle {
-                        width: 200px;
-                        height: 160px;
-                        background: #1C1F2310;
-                        border-radius: 20px;
-                        border-width: 1px;
-                        border-color: #FFFFFF33;
+                        width: 100%;
+                        height: 24px;
+                        y: parent.height - self.height;
+                        background: #070812;
+                    }
 
-                        TouchArea {
-                            width: 100%;
-                            height: 100%;
-                            mouse-cursor: move;
-                            
-                            property <length> start-x;
-                            property <length> start-y;
-                            property <bool> dragging: false;
+                    TouchArea {
+                        width: 100%;
+                        height: 100%;
+                        mouse-cursor: move;
+                        
+                        property <length> start-x;
+                        property <length> start-y;
+                        property <bool> dragging: false;
 
-                            pointer-event(event) => {
-                                 if (event.kind == PointerEventKind.down) {
-                                     self.start-x = self.mouse-x;
-                                     self.start-y = self.mouse-y;
-                                     self.dragging = true;
-                                 } else if (event.kind == PointerEventKind.up || event.kind == PointerEventKind.cancel) {
-                                     self.dragging = false;
-                                 }
-                            }
-                            
-                            moved => {
-                                if (self.dragging) {
-                                    root.move_window(self.mouse-x - self.start-x, self.mouse-y - self.start-y);
-                                }
-                            }
+                        pointer-event(event) => {
+                             if (event.kind == PointerEventKind.down) {
+                                 self.start-x = self.mouse-x;
+                                 self.start-y = self.mouse-y;
+                                 self.dragging = true;
+                             } else if (event.kind == PointerEventKind.up || event.kind == PointerEventKind.cancel) {
+                                 self.dragging = false;
+                             }
                         }
                         
-                        Image {
-                            source: @image-url("assets/logo.png");
-                            width: 120px;
-                            height: 120px;
+                        moved => {
+                            if (self.dragging) {
+                                root.move_window(self.mouse-x - self.start-x, self.mouse-y - self.start-y);
+                            }
+                        }
+                    }
+
+                    // Title text on the left
+                    Text {
+                        x: 28px;
+                        y: 28px + (28px - self.height) / 2;
+                        text: "Game Mode Port";
+                        color: #E5E7EB;
+                        font-size: 13px;
+                        font-weight: 500;
+                    }
+
+                    // Status Indicator (next to close button)
+                    Rectangle {
+                        x: parent.width - 28px - 28px - 12px - 28px;
+                        y: 28px;
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 14px;
+                        background: #FFFFFF10;
+                        
+                        Rectangle {
+                            width: 10px;
+                            height: 10px;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
-                            image-fit: contain;
-                        }
-
-                        // Status Indicator
-                        Rectangle {
-                            x: parent.width - 16px - 12px;
-                            y: parent.height - 16px - 12px;
-                            width: 12px;
-                            height: 12px;
-                            border-radius: 6px;
+                            border-radius: 5px;
                             background: root.active ? #0072FF : #6B7280;
                             animate background { duration: 300ms; easing: ease-out; }
                         }
                     }
+
+                    // Close Button
+                    TouchArea {
+                        x: parent.width - 28px - 28px;
+                        y: 28px;
+                        width: 28px;
+                        height: 28px;
+                        mouse-cursor: pointer;
+                        clicked => { root.close_app(); }
+
+                        Rectangle {
+                            width: 28px;
+                            height: 28px;
+                            border-radius: 14px;
+                            background: parent.has-hover ? #FFFFFF20 : #FFFFFF10;
+                            animate background { duration: 80ms; easing: ease-out; }
+                        }
+                            
+                        Path {
+                            width: 10px;
+                            height: 10px;
+                            x: 9px;
+                            y: 9px;
+                            stroke: #9CA3AF;
+                            stroke-width: 1.5px;
+                            MoveTo { x: 0; y: 0; }
+                            LineTo { x: 10; y: 10; }
+                            MoveTo { x: 0; y: 10; }
+                            LineTo { x: 10; y: 0; }
+                        }
+                    }
                 }
 
-                Rectangle { height: 24px; }
+                Rectangle { height: 12px; }
 
                 // Action Button
                 HorizontalLayout {
@@ -353,39 +397,7 @@ export component AppWindow inherits Window {
                     }
                 }
             }
-            
-            // Close Button
-            TouchArea {
-                x: parent.width - 20px - 32px;
-                y: 20px;
-                width: 32px;
-                height: 32px;
-                mouse-cursor: pointer;
-                clicked => { root.close_app(); }
 
-                Rectangle {
-                    width: 28px;
-                    height: 28px;
-                    x: 2px;
-                    y: 2px;
-                    border-radius: 14px;
-                    background: parent.has-hover ? #FFFFFF20 : transparent;
-                    animate background { duration: 80ms; easing: ease-out; }
-                }
-                    
-                Path {
-                    width: 12px;
-                    height: 12px;
-                    x: 10px;
-                    y: 10px;
-                    stroke: #9CA3AF;
-                    stroke-width: 2px;
-                    MoveTo { x: 0; y: 0; }
-                    LineTo { x: 12; y: 12; }
-                    MoveTo { x: 0; y: 12; }
-                    LineTo { x: 12; y: 0; }
-                }
-            }
 
             // Advanced Popup Overlay
             if root.show_advanced_popup: AdvancedPopup {

@@ -17,7 +17,8 @@ pub struct GameDetector;
 static KNOWN_GAMES: &[&str] = &[
     "cod", "cod24-cod", "FortniteClient-Win64-Shipping", "r5apex", "cs2", 
     "valheim", "dota2", "League of Legends", "Overwatch", "Valorant-Win64-Shipping",
-    "GTA5", "RDR2", "Cyberpunk2077", "Minecraft.Windows"
+    "GTA5", "RDR2", "Cyberpunk2077", "Minecraft.Windows",
+    "FPSAimTrainer-Win64-Shipping"
 ];
 
 static EXCLUDED_PROCESSES: &[&str] = &[
